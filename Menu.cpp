@@ -106,12 +106,13 @@ void patient_edit(int id);
 void patient_doctor_display();
 
 void doctor_menu(char ch, int id);
+void doctorOptions(int ID);
 void doctor_register();
 void doctor_display();
 void doctor_save();
 void doctors_load();
 int doctor_login();
-void doctor_edit(int id);
+void doctor_edit(int ID);
 void doctor_appointment_list(int ID);
 
 void admin_menu(char ch);
@@ -139,8 +140,10 @@ void appointment_list();
 void appointment_load();
 void appointment_save();
 void appointment_edit(int ID, int appID);
+void appointmentCancel(int ID, int appID);
 
-int viewAppointmentByPatientID(int ID);
+void viewAppointmentByPatientID(int ID);
+void viewAppointmentByDoctorID(int ID);
 int getDoctorsByCityID(int cityID);
 Doctor getDoctorByDoctorID(int ID);
 City getCityByCityID(int ID);
@@ -158,9 +161,9 @@ int main() {
     char ch, mainch;
     do {
 		system("cls");
-		cout << "\n\t\t____________________________________________________________________\n\n\n";
+		cout << "\n\t\t====================================================================\n\n\n";
 		cout << "\n\t\t               WELCOME TO HOSPITAL APPOINTMENT SYSTEM               \n\n\n";
-		cout << "\n\t\t_________________________    MAIN MENU    __________________________\n\n\n";
+		cout << "\n\t\t=========================    MAIN MENU    ==========================\n\n\n";
 		cout << "																			\n\n";
 		cout << "\t|Press 1 to Select Patient Menu	|" << endl;
 		cout << "\t|Press 2 to Select Doctor Menu	|" << endl;
@@ -205,18 +208,24 @@ void doctor_register(){
 	City newCity;
 	Hospital newHospital;
 	int ID, status = 0;
+	char response;
+	
 	hospital_display();
 	cout << "\n\tHospital ID: "; cin >> newDoctor.hospitalID;
 	cout << "\tUser name: "; cin >> newDoctor.username;
 	cout << "\tPassword: "; cin >> newDoctor.password;
-	cout << "\tName: "; cin >> newDoctor.name;
-	cout << "\tSpecialization: "; cin >> newDoctor.specialization;
+	cin.ignore();
+	cout << "\tName: "; cin.getline(newDoctor.name,50);
+	cout << "\tSpecialization: "; cin.getline(newDoctor.specialization,50);
 	cout << endl;
-
-	newDoctor.docID = doctorCount + 1;
-	doctors[doctorCount] = newDoctor;
-	doctorCount++;
-	cout << "\n\tDoctor successfully saved!\n";
+	
+	cout << "\n\tPress 'y' to Register\n\tPress any key to Cancel\n\t"; response = getche();
+	if (response == 'y' || response == 'Y'){
+		newDoctor.docID = doctorCount + 1;
+		doctors[doctorCount] = newDoctor;
+		doctorCount++;
+		cout << "\n\tDoctor successfully saved!\n";
+	}
 }
 
 void doctor_display(){
@@ -274,27 +283,22 @@ void doctors_load(){
 
 int doctor_login(){
 	if (doctorCount == 0){
-        cout << "\tNo registered doctors found!\n";
-        getchar();
         return -1;
     }
 	char usernameLogin[USERNAME_LEN];
 	char passwordLogin[PASSWORD_LEN] = {'1'};
 	for (int i = 0; i < 50; i++)
 		passwordLogin[i] = '\0';
-//	char passwordLogin[PASSWORD_LEN];
 	cout << "\n\tEnter Username: "; cin >> usernameLogin;
 	askForSecretPassword(passwordLogin);
 	for(int i = 0; i < doctorCount; i++){
 	if(strcmp(usernameLogin, doctors[i].username) == 0 && strcmp(passwordLogin, doctors[i].password) == 0){
-//	if(strcmp(usernameLogin, doctors[i].username) == 0){
 			presentDoctorID = doctors[i].docID;
 			cout << "\n\tSuccessfully Logged in!";
 			return doctors[i].docID;	
 		}
 	}
-//	cout << "\nLogin failed!\nIncorrect username or password.";
-	return -1;
+	return -2;
 }
 
 void doctor_menu(char ch, int id){
@@ -302,7 +306,7 @@ void doctor_menu(char ch, int id){
         system("cls");
 		cout << "\n\t\t____________________________________________________________________\n\n\n";
 		cout << "\n\t\t               WELCOME TO HOSPITAL APPOINTMENT SYSTEM               \n\n\n";
-        cout << "\n\t\t_________________________      Doctor MENU      ____________ _______\n\n\n";
+        cout << "\n\t\t_________________________      Doctor MENU      ____________________\n\n\n";
 		cout << "\t|Press 1 to LOGIN as a Doctor		|" << endl;
 		cout << "\t|Press 2 to Register as Doctor		|" << endl;
 		cout << "\t|Press 3 Back to Main Menu		|" << endl;
@@ -313,38 +317,13 @@ void doctor_menu(char ch, int id){
         switch (ch) {
             case '1':
                 id = doctor_login();
-                if (id > 0) {
-                    cout <<"Login successful!\n";
-                    do {
-                        system("cls");
-						cout << "\n\t\t____________________________________________________________________\n\n\n";
-						cout << "\n\t\t               WELCOME TO HOSPITAL APPOINTMENT SYSTEM               \n\n\n";
-	                    cout <<" \n\t\t               doctor@gmail.com [1] successfully Logged In:\n\n";
-						cout << "\n\t\t_________________________      Doctor Options      ___________________\n\n\n";
-	            		cout << "\t|Press 1 to View Appointment		|" << endl;
-						cout << "\t|Press 2 to Edit Information		|" << endl;
-						cout << "\t|Press 3 to Logout				|" << endl;
-						cout << "\n\t\t\t Please enter your choice: ";
-
-                        ch = getche();
-        				cout << endl;
-                        switch (ch) {
-                            case '1': 
-								cout <<"\n\tDisplay all the appoints for the dr who logged in:\n";
-								cout <<"\tPress any key to Continue"; getch();
-                                break;
-                            case '2':
-                            	doctor_edit(presentDoctorID);
-                            	break;
-                            case '3':
-                                cout <<"\n\tLogged out\n";
-                                break;
-                            default:
-                                cout <<"\n\tInvalid choice!!\n";
-                                cout <<"\tPress any key to Continue"; getch();
-                        }
-                    } while (ch != '2');
-                } else {
+                if (id > 0)
+                    doctorOptions(id);
+                else if (id = -1){
+                	cout << "\n\tNo registered doctors found!\n";
+                	getchar();
+				}
+                else {
                     cout <<"\n\tLogin failed!\n";
                     cout <<"\tPress any key to Continue"; getch();
                 }
@@ -352,8 +331,6 @@ void doctor_menu(char ch, int id){
             case '2':
             	doctor_register();
             	doctor_save();
-				cout << "\n\tGet docters info ad register\n";
-				cout << "\tPress any key to Continue"; getch();
                 break;
             case '3':
             	system("cls");
@@ -363,6 +340,63 @@ void doctor_menu(char ch, int id){
                 cout <<"\tPress any key to Continue"; getch();
         }
     } while (ch != '3');
+}
+
+void doctorOptions(int ID){
+	char ch;
+    do {
+    system("cls");
+	cout << "\n\t\t____________________________________________________________________\n\n\n";
+	cout << "\n\t\t               WELCOME TO HOSPITAL APPOINTMENT SYSTEM               \n\n\n";
+    cout <<" \n\t\t               " << doctors[ID - 1].username << " [" << ID << "] successfully Logged In:\n\n";
+	cout << "\n\t\t_________________________      Doctor Options      ___________________\n\n\n";
+	cout << "\t|Press 1 to View Appointments		|" << endl;
+	cout << "\t|Press 2 to Edit personal Information	|" << endl;
+	cout << "\t|Press 3 to View hospitals		|" << endl;
+	cout << "\t|Press 4 to View personal Information	|" << endl;
+	cout << "\t|Press 5 to Logout			|" << endl;
+	cout << "\n\t\t\t Please enter your choice: ";
+
+    ch = getche();
+	cout << endl;
+    switch (ch) {
+        case '1': 
+        	viewAppointmentByDoctorID(ID);
+            break;
+        case '2':
+        	doctor_edit(ID);
+        	break;
+        case '3':
+            hospital_display();
+            getchar();
+            break;
+        case '4':
+        	cout << "\n\n\t______________________________________________________________________________________________________________________________________________________\n";
+			cout << setw(20) << "DoctorId" 
+				<< setw(20) << "Username" 
+				<< setw(20) << "Password" 
+				<< setw(20) << "Name" 
+				<< setw(30) << "Specialization"
+				<< setw(15) << "Hospital ID"
+				<< setw(25) << "Hospital Name" << endl;
+			cout << "\t______________________________________________________________________________________________________________________________________________________\n";
+			cout << setw(20) << doctors[ID-1].docID
+				<< setw(20) << doctors[ID-1].username 
+				<< setw(20) << doctors[ID-1].password 
+				<< setw(20) << doctors[ID-1].name 
+				<< setw(30) << doctors[ID-1].specialization
+				<< setw(15) << doctors[ID-1].hospitalID
+				<< setw(25) << hospitals[doctors[ID-1].hospitalID - 1].hospitalName << endl;
+			getchar();
+            break;
+        case '5':
+        	cout <<"\n\tLogged out\n";
+            break;
+        default:
+            cout <<"\n\tInvalid choice!!\n";
+            cout <<"\tPress any key to Continue"; getch();
+    	}
+	} while (ch != '5');
 }
 
 void getDoctors(){
@@ -432,50 +466,58 @@ void getDoctors(){
 	
 }
 
-void doctor_edit(int id){
+void doctor_edit(int ID){
+	Doctor newDoctor;
+	char response;
+	int id = ID - 1;
 	if (doctorCount == 0){
         cout << "\tNo registered doctors found!\n";
         getchar();
         return;
     }
-	for(int i = 0; i < doctorCount; i++){
-		if(id == doctors[i].docID){
-			cout << "\n\tDoctor ID: " << doctors[i].docID;
-			cout << "\n\tDoctor Username: " << doctors[i].username;
-			cout << "\n\tDoctor password: " << doctors[i].password;
-			cout << "\n\tDoctor Name: " << doctors[i].name;
-			cout << "\n\tDoctor Specialization: " << doctors[i].specialization;
-			cout << "\n\tHospital ID: " << doctors[i].hospitalID;
-			
-			Doctor newDoctor;
-		    cout << "\n\tNew information:\n";
-		    newDoctor.docID = doctors[i].docID;
-		    cout << "\tUsername: "; cin >> newDoctor.username;
-			cout << "\tPassword: "; cin >> newDoctor.password;
-			cout << "\tName: "; cin >> newDoctor.name;
-			cout << "\tSpecialization: "; cin >> newDoctor.specialization;
-			cout << endl;
-			hospital_display();
-			cout << endl;
-			cout << "\tHospital ID: "; cin >> newDoctor.hospitalID;
-			doctors[i] = newDoctor;
-			
-			fstream file;
-			file.open(docfile, ios::out | ios::binary);
-			
-			if(file.is_open())
-			{
-				int fp = sizeof(Doctor)*i;
-				file.seekg(fp);
-				file.write(reinterpret_cast<char*>(&doctors[i]), sizeof(Doctor));
-				cout << "\n\tInformation changed!\n";
-				file.close();
-			}
-			else
-				cout << "\n\tERROR\n";
-			getchar();
-			break;
+
+	cout << "\n\n\t_____________________________________________________________________________________________________________________________\n";
+	cout << setw(20) << "DoctorId" 
+		<< setw(20) << "Username" 
+		<< setw(20) << "Password" 
+		<< setw(20) << "Name" 
+		<< setw(30) << "Specialization"
+		<< setw(15) << "Hospital ID" << endl;
+	cout << "\t_____________________________________________________________________________________________________________________________\n";
+	cout << setw(20) << doctors[id].docID
+		<< setw(20) << doctors[id].username 
+		<< setw(20) << doctors[id].password 
+		<< setw(20) << doctors[id].name 
+		<< setw(30) << doctors[id].specialization
+		<< setw(15) << doctors[id].hospitalID << endl;
+		
+    cout << "\n\n\tNew information:\n";
+    newDoctor.docID = ID;
+    cout << "\n\tUser name: "; cin >> newDoctor.username;
+	cout << "\tPassword: "; cin >> newDoctor.password;
+	cin.ignore();
+	cout << "\tName: "; cin.getline(newDoctor.name,50);
+	cout << "\tSpecialization: "; cin.getline(newDoctor.specialization,50);
+	cout << "\tHospital ID: "; cin >> newDoctor.hospitalID;
+	
+	cout << "\n\tPress 'y' to save information\n\tPress any key to Cancel\n\t"; response = getche();
+	if(response == 'y' || response == 'Y'){
+	
+		doctors[id] = newDoctor;
+		fstream file;
+		file.open(docfile, ios::out | ios::binary);
+		
+		if(file.is_open())
+		{
+			int fp = sizeof(Doctor)*id;
+			file.seekg(fp);
+			file.write(reinterpret_cast<char*>(&doctors[id]), sizeof(Doctor));
+			cout << "\n\tInformation changed!\n";
+			file.close();
 		}
+		else
+			cout << "\n\tERROR\n";
+		getchar();
 	}
 }
 
@@ -523,10 +565,12 @@ void patient_register(){
     
     cout << "\n\n\tEnter patient's username: "; cin >> newPatient.username;
 	cout << "\tEnter patient's password: "; cin >> newPatient.password;
-	cout << "\tEnter patient's name: "; cin >> newPatient.name;
+	cin.ignore();
+	cout << "\tEnter patient's name: "; cin.getline(newPatient.name,50);
+//	cout << "\tEnter patient's name: "; cin >> newPatient.name;
 	cout << "\tEnter patient's age: "; cin >> newPatient.age;
 	cout << "\tEnter patient's phoneNo: "; cin >> newPatient.phoneno;
-	cout << "\tEnter patient's gender (male/female/other): "; cin >> newPatient.gender;
+	cout << "\tEnter patient's gender (M = Male/ F = Female/O = Other): "; cin >> newPatient.gender;
     newPatient.patientID = patientCount + 1;
     newPatient.delete_p = 0;
     
@@ -707,10 +751,11 @@ void patient_edit(int id){
 		    newPatient.patientID = patients[i].patientID;
 		    cout << "\n\n\tEnter new patient's username: "; cin >> newPatient.username;
 			cout << "\tEnter new patient's password: "; cin >> newPatient.password;
-			cout << "\tEnter new patient's name: "; cin >> newPatient.name;
+			cin.ignore();
+			cout << "\tEnter patient's name: "; cin.getline(newPatient.name,50);
 			cout << "\tEnter new patient's age: "; cin >> newPatient.age;
 			cout << "\tEnter new patient's phoneNo: "; cin >> newPatient.phoneno;
-			cout << "\tEnter new patient's gender (male/female/other): "; cin >> newPatient.gender;
+			cout << "\tEnter new patient's gender (M = Male/ F = Female/O = Other): "; cin >> newPatient.gender;
 			patients[i] = newPatient;
 			
 			fstream file;
@@ -747,11 +792,11 @@ void patient_options(){
 			cout << "\n\t\t_________________________      Patient Options      ___________________\n\n\n";
     		cout << "\t|Press 1 to Book Appointment		|" << endl;
 			cout << "\t|Press 2 to Cancel appointment		|" << endl;
-			cout << "\t|Press 3 to edit Personal Information	|" << endl;
-			cout << "\t|Press 4 to edit Appointment Information|" << endl;
-			cout << "\t|Press 5 to view Personal Information	|" << endl;
-			cout << "\t|Press 6 to view Appointment Information|" << endl;
-			cout << "\t|Press 7 to view Doctors Information	|" << endl;
+			cout << "\t|Press 3 to Edit Personal Information	|" << endl;
+			cout << "\t|Press 4 to Edit Appointment Information|" << endl;
+			cout << "\t|Press 5 to View Personal Information	|" << endl;
+			cout << "\t|Press 6 to View Appointment Information|" << endl;
+			cout << "\t|Press 7 to View Doctors Information	|" << endl;
 			cout << "\t|Press 8 to Logout			|" << endl;
 			cout << "\n\t\t\t Please enter your choice: ";
             ch = getche();
@@ -761,10 +806,8 @@ void patient_options(){
 					appointment_book(ID);
                     break;
                 case '2':
-					cout << "\n\tAre you sure that you want to cancel your appointment (y/n)"; cin >> choice;
-					if (choice == 'Y' || choice == 'y'){
-						appointments[ID].cancel = 0;
-					}
+                	cout << "\n\tEnter appointment ID to cancel: "; cin >> appID;
+					appointmentCancel(ID, appID);
                     break;
                 case '3':
                     patient_edit(ID);
@@ -784,24 +827,23 @@ void patient_options(){
                     break;
                 case '6':
 					viewAppointmentByPatientID(ID);
-					getchar();getchar();
+					getchar();
                     break;
                     
                 case '7':
                    	patient_doctor_display();
-					getchar();getchar();
+					getchar();
                     break;
-                    
+            
                 case '8':
                     cout << "\n\tLogged out\n";
-                    ch = '3';
                     break;
                 default:
                     cout << "\n\tInvalid choice!!\n";
                     cout << "\n\tPress any key to Continue"; getch();
             }
             cout << "\n\tPress any key to Continue"; getch();
-	    } while (ch != '3');
+	    } while (ch != '8');
 	}
 	else{
         cout <<"\n\tLogin failed!\n";
@@ -1006,14 +1048,13 @@ void admin_menu(char ch){
 									}
 								}while (status == 0);
                                 break;
-                            case '4': //City
+                            case '4':
                             	city();
                                 break;
-			                case '5': //Hospital
+			                case '5':
                             	hospital();
                                 break;                      
-                            case '6': //Logout
-                            	ch = '7';
+                            case '6':
                                 cout <<"\n\tLogged out\n";
                                 cout <<"\tPress any key to Continue"; getch();
                                 break;
@@ -1021,7 +1062,7 @@ void admin_menu(char ch){
                                 cout <<"\n\tInvalid choice!!\n";
                                 cout <<"\tPress any key to Continue"; getch();
                         }
-                    } while (ch != '7');
+                    } while (ch != '6');
                 } else {
                     cout <<"\n\tLogin Failed!\n";
                     cout <<"\n\tPress any key to continue.";
@@ -1189,25 +1230,11 @@ void hospital_add(){
 		city_display();
 		return;
 	}
-
 	
-	getchar();
+	cin.ignore();
 	cout << "\n\tEnter hospital name: "; cin.getline(newHospital.hospitalName,20);
 	cout << "\tEnter hospital address: "; cin.getline(newHospital.hospitalAddress,50);
 	int status = 1;
-
-//		do{
-//		cout << "\tAdd city id: "; cin >> newHospital.cityID;
-//		for(int i = 0; i < cityCount; i++){
-//			if (newHospital.cityID == cities[i].cityID){
-//				cout << cities[i].cityName;
-//				status = 0;
-//				break;
-//			}
-//		}
-//		if (status == 0)
-//			cout << "\n\tCity against given id not found!";
-//	}while(status != 0);
 	newHospital.hospitalID = hospitalCount + 1;
 	hospitals[hospitalCount++] = newHospital;
 	cout << "\n\tHospital successfully saved! Hospital ID: " << hospitalCount;
@@ -1220,6 +1247,7 @@ void hospital_display(){
     }
     else {
     	cout << endl;
+    	cout << "\t_______________________________________________________________________________________________________\n";
     	cout <<setw(20) <<"Hospital ID" <<setw(20) <<"Hospital Name" <<setw(45) << "Address" <<setw(20) <<"City Name" << endl;
     	cout << "\t_______________________________________________________________________________________________________\n";
         for (int i = 0; i < hospitalCount; i++) {
@@ -1438,7 +1466,7 @@ void appointment_book(int ID){
 	char response;
 	cout << "\n\tBook Appointment\n\n";
 	
-	cout << "Enter doctor ID: "; cin >> newAppointment.doctorID;
+	cout << "\n\tEnter doctor ID: "; cin >> newAppointment.doctorID;
 	newDoctor = getDoctorByDoctorID(newAppointment.doctorID);
 	if (newDoctor.docID > 0){
 		cout <<"\t\t\t(" << newDoctor.name<<")";
@@ -1453,7 +1481,7 @@ void appointment_book(int ID){
 	newAppointment.appointmentID = appointmentCount + 1;
 	newAppointment.cancel = 1;
 	
-	cout << "\nAre you sure to book appointment (y/n)?: "; cin >> response;
+	cout << "\n\tAre you sure to book appointment (y/n)?: "; cin >> response;
 	if(response == 'y' or response == 'Y'){
 		appointments[appointmentCount++] = newAppointment;
 		appointment_save();
@@ -1478,19 +1506,6 @@ void doctor_appointment_list(int ID){
 	}
 	cout << "\n";
 }
-//
-//hospital foundHospital(int ID){
-//	Hospital hospitalname;
-//	for(int i = 0; i < hospitalCount; i++){
-//		if(newDoctor.hospitalID == hospitals[i].hospitalID){
-//			hospitalname.hospitalID = hospitals[i].hospitalID;
-//			hospitalname.hospitalName = hospitals[i].hospitalName;
-//			return hospitalname;	
-//		}
-//	}
-//	hospitalname.hospitalID = -1;
-//	return hospitalname;
-//}
 
 City getCityByCityID(int ID){
 	City city;
@@ -1557,25 +1572,29 @@ Hospital getHospitalByHospitalID(int ID){
 }
 
 void appointment_list(){
+	string status;
 	if (appointmentCount == 0){
 		cout << "\n\tNo appointment info available!\n";
 		getchar();
 		return;
 	}
 	cout << "\n\n";
-	cout << setw(20)<< "AppointmentID" << setw(13) << "PatientID" << setw(25) << "Patinet name" << setw(25) << "Doctor" << setw(15) << "Date" << setw(20) << "City" << setw(20) << "Hospital";
-	cout << "\n________________________________________________________________________________________________________________________________";
+	cout << setw(20)<< "AppointmentID" << setw(13) << "PatientID" << setw(25) << "Patinet name" << setw(25) << "Doctor" << setw(15) << "Date" << setw(20) << "City" << setw(20) << "Hospital" << setw(20) << "Status";
+	cout << "\n\t____________________________________________________________________________________________________________________________________________________________";
 	for(int i = 0; i < appointmentCount; i++){
-		if(appointments[i].cancel == 1)
 		cout << "\n";
+		status = (appointments[i].cancel == 0) ? "Cancelled" : "Not Cancelled";
 		cout << setw(20) << appointments[i].appointmentID
 			<< setw(13) << appointments[i].patientID
 			<< setw(25) << patients[appointments[i].patientID - 1].name
 			<< setw(25) << doctors[appointments[i].doctorID - 1].name
 			<< setw(15) << appointments[i].date
-//			<< setw(20) << cities[appointments[i].cityID - 1].cityName
-			<< setw(20) << hospitals[appointments[i].doctorID - 1].hospitalName;
+			<< setw(20) << cities[hospitals[appointments[i].doctorID - 1].cityID - 1].cityName
+			<< setw(20) << hospitals[appointments[i].doctorID - 1].hospitalName
+			<< setw(20) << status ;
+			
 	}
+	cout << "\n\t____________________________________________________________________________________________________________________________________________________________";
 	getchar();getchar();
 }
 
@@ -1655,7 +1674,6 @@ void appointment_edit(int ID, int appID){
 			cout << "\n\tPress 'y' to Save the changes\n\tPress any key to Cancel.\n"; response = getche();
 			if(response == 'y' or response == 'Y'){
 				appointments[i] = newAppointment;
-//				appointment_save();
 
 				fstream f;
 				f.open(appFILE, ios::out | ios::binary | ios::in );
@@ -1684,14 +1702,26 @@ void appointment_edit(int ID, int appID){
 	
 }
 
-int viewAppointmentByPatientID(int ID){
+void viewAppointmentByPatientID(int ID){
+	int patientAppointmentCount = 0;
+	for(int i = 0; i < appointmentCount; i++){
+		if(ID == appointments[i].patientID && appointments[i].cancel == 1){
+			patientAppointmentCount++;
+		}
+	}
+	
+	if (patientAppointmentCount == 0){
+		cout << "\n\tYour appointment information is not available.";
+		return;
+	}
+	
 	cout << "\n\tView appointment information:\n";
    	cout << "\n\n";
 	cout << setw(10)<< "Appt.ID" << setw(20) << "Patient" << setw(12) << "DoctorID" << setw(20) << "Doctor Name" << setw(15) << "Date" << setw(15) << "City" << setw(20) << "Hospital";
 	cout << "\n__________________________________________________________________________________________________________________________";
 
 	for(int i = 0; i < appointmentCount; i++){
-		if(ID == appointments[i].patientID){
+		if(ID == appointments[i].patientID && appointments[i].cancel == 1){
 			cout << "\n";
 			cout << setw(10) << appointments[i].appointmentID
 				<< setw(20) << patients[ID - 1].name
@@ -1703,4 +1733,70 @@ int viewAppointmentByPatientID(int ID){
 		}
 	}
 	cout << "\n__________________________________________________________________________________________________________________________";
+}
+
+void appointmentCancel(int ID, int appID){
+	char response;
+
+	for(int i = 0; i < appointmentCount; i++){
+		if(ID == appointments[i].patientID && appID == appointments[i].appointmentID && appointments[i].cancel == 1){
+		   	cout << "\n\tPress 'y' to Cancel appointment\n\tPress any key to exit\n\t"; cin >> response;
+		   	if(response == 'y' || response == 'Y'){
+		   		appointments[appID-1].cancel = 0;
+		   		
+		   		fstream f;
+				f.open(appFILE, ios::out | ios::binary | ios::in );
+				
+				if(f.is_open())
+				{
+					f.seekg(0, ios::beg);
+	
+					f.seekg((appID-1)*sizeof(Appointment),ios::cur);
+					f.write(reinterpret_cast<char*>(&appointments[appID-1]), sizeof(Appointment));
+					f.close();
+				}
+				else
+					cout << "ERROR\n";				
+
+				cout << "\n\tAppointment Cancelled!";
+				getchar();
+			}
+		   	return;
+		}
+	}
+	cout << "\n\tWrong appointment ID provided!";
+	getchar();
+}
+
+void viewAppointmentByDoctorID(int ID){
+	int doctorAppointmentCount = 0;
+	for(int i = 0; i < appointmentCount; i++){
+		if(ID == appointments[i].doctorID && appointments[i].cancel == 1){
+			doctorAppointmentCount++;
+		}
+	}
+	
+	if (doctorAppointmentCount == 0){
+		cout << "\n\tYour appointment information is not available.";
+		return;
+	}
+	
+	cout << "\n\tView appointment information:\n";
+   	cout << "\n\n";
+   	cout << "\n\t________________________________________________________________________________________________";
+	cout << setw(15) << "Appt.ID" << setw(25) << "Patient" << setw(15) << "Date" << setw(20) << "Phone#" << setw(20) << "Gender";
+	cout << "\n\t________________________________________________________________________________________________";
+
+	for(int i = 0; i < appointmentCount; i++){
+		if(ID == appointments[i].doctorID && appointments[i].cancel == 1 && patients[appointments[i].patientID - 1].delete_p == 0){
+			cout << "\n";
+			cout << setw(15) << appointments[i].appointmentID
+				<< setw(25) << patients[appointments[i].patientID - 1].name
+				<< setw(15) << appointments[i].date
+				<< setw(20) << patients[appointments[i].patientID - 1].phoneno
+				<< setw(20) << patients[appointments[i].patientID - 1].gender;
+		}
+	}
+	cout << "\n\t________________________________________________________________________________________________";
+	cin.ignore();
 }
